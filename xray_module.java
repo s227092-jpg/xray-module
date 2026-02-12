@@ -7,6 +7,7 @@ import me.iquintennn.BLANK.module.Category;
 import me.iquintennn.BLANK.module.Module;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderGlobal;
 
 import org.lwjgl.input.Keyboard;
 
@@ -21,6 +22,7 @@ public class XRay extends Module{
 	@Override
 	public void onEnable()
 	{
+		// Minecraft 1.8 block names for Eaglecraft compatibility
 		XRay.xrayBlocks.add(Block.getBlockFromName("coal_ore"));
 		XRay.xrayBlocks.add(Block.getBlockFromName("iron_ore"));
 		XRay.xrayBlocks.add(Block.getBlockFromName("gold_ore"));
@@ -54,17 +56,55 @@ public class XRay extends Module{
 		XRay.xrayBlocks.add(Block.getBlockFromName("enchanting_table"));
 		XRay.xrayBlocks.add(Block.getBlockFromName("bookshelf"));
 		XRay.xrayBlocks.add(Block.getBlockFromName("command_block"));
-		Block.isXRayEnabled = true;
-		Minecraft.getMinecraft().renderGlobal.loadRenderers();
-		Wrapper.mc.gameSettings.gammaSetting = 10f;
+		
+		// Eaglecraft 1.8 compatible rendering changes
+		try {
+			Block.isXRayEnabled = true;
+			if(Minecraft.getMinecraft().renderGlobal != null) {
+				Minecraft.getMinecraft().renderGlobal.loadRenderers();
+			}
+		} catch(Exception e) {
+			// Handle Eaglecraft rendering differences
+			try {
+				Minecraft mc = Minecraft.getMinecraft();
+				if(mc.theWorld != null) {
+					mc.renderGlobal.loadRenderers();
+				}
+			} catch(Exception e2) {
+				// Fallback for browser rendering
+				System.out.println("[XRay] Renderer not available in Eaglecraft");
+			}
+		}
+		
+		// Brightness adjustment for Eaglecraft
+		if(Wrapper.mc != null && Wrapper.mc.gameSettings != null) {
+			Wrapper.mc.gameSettings.gammaSetting = 10f;
+		}
 	}
 	
 	@Override
 	public void onDisable()
 	{
 		Block.isXRayEnabled = false;
-		Minecraft.getMinecraft().renderGlobal.loadRenderers();
-		Wrapper.mc.gameSettings.gammaSetting = 1f;
+		try {
+			if(Minecraft.getMinecraft().renderGlobal != null) {
+				Minecraft.getMinecraft().renderGlobal.loadRenderers();
+			}
+		} catch(Exception e) {
+			try {
+				Minecraft mc = Minecraft.getMinecraft();
+				if(mc.theWorld != null) {
+					mc.renderGlobal.loadRenderers();
+				}
+			} catch(Exception e2) {
+				System.out.println("[XRay] Renderer not available in Eaglecraft");
+			}
+		}
+		
+		// Reset brightness for Eaglecraft
+		if(Wrapper.mc != null && Wrapper.mc.gameSettings != null) {
+			Wrapper.mc.gameSettings.gammaSetting = 1f;
+		}
 	}
 	
 	public static boolean isXrayBlock(Block blockToCheck)
